@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Batalla de Halloween</title>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --naranja:#c4661f;
+    --negro:#15110e;
+    --verde:#7f9a4a;
+    --morado:#6a4b8c;
+    --morado-osc:#2a1d3b;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{
+    min-height:100vh;
+    font-family:'Special Elite',Georgia,serif;
+    color:#fff;
+    background:#120d18 url('FONDO PAG.png') center/cover fixed no-repeat; /* <-- TU IMAGEN DE FONDO */
+    padding:32px 24px 56px;
+  }
+  body::before{content:"";position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:-1}
+
+  /* Título: panel negro-morado con doble borde */
+  .titulo{
+    max-width:1120px;margin:0 auto 64px;
+    text-align:center;padding:24px 16px;
+    background:linear-gradient(180deg,var(--morado-osc),var(--negro));
+    border:3px solid var(--naranja);
+    border-radius:16px;
+    outline:2px solid var(--morado);outline-offset:5px;
+    box-shadow:0 8px 22px rgba(0,0,0,.65);
+  }
+  .titulo h1{
+    font-family:'Creepster','Impact',cursive;
+    font-weight:400;font-size:clamp(2rem,6vw,4.2rem);
+    letter-spacing:.06em;color:var(--naranja);
+    text-shadow:3px 3px 0 #000;
+  }
+
+  .marcador{
+    max-width:1120px;margin:0 auto;
+    display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap;
+  }
+  .equipo{display:flex;flex-direction:column;gap:20px;align-items:flex-start}
+
+  /* Nombre: placa morada con filo verde abajo */
+  .nombre{
+    background:linear-gradient(180deg,var(--morado),var(--morado-osc));
+    color:#e9e2f2;
+    border:2px solid var(--negro);
+    border-bottom:4px solid var(--verde);
+    border-radius:10px 10px 4px 4px;
+    padding:10px 26px;font-size:1.4rem;
+    box-shadow:0 4px 12px rgba(0,0,0,.6);
+  }
+
+  .tarjetas{display:flex;flex-direction:column;align-items:center;gap:8px}
+
+  /* Contenedor de imagen: más cuadrado, marco naranja + borde interior morado */
+  .tarjeta{
+    width:400px;height:300px;flex:none;
+    background:var(--morado-osc);
+    border:4px solid var(--naranja);
+    border-radius:18px;
+    padding:6px;
+    position:relative;
+    box-shadow:0 8px 20px rgba(0,0,0,.65), inset 0 0 0 2px var(--morado);
+    overflow:hidden;
+  }
+  .tarjeta img{
+    width:100%;height:100%;object-fit:cover;display:block;
+    border-radius:10px;
+    border:2px solid var(--negro);
+  }
+  /* Detalle: esquinas verdes */
+  .tarjeta::before,.tarjeta::after{
+    content:"";position:absolute;width:22px;height:22px;
+    border:3px solid var(--verde);pointer-events:none;
+  }
+  .tarjeta::before{top:10px;left:10px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+  .tarjeta::after{bottom:10px;right:10px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+
+  /* Contador sin marco */
+  .contador{
+    width:100%;height:auto;min-height:110px;
+    align-self:center;
+    background:none;border:0;border-radius:0;padding:0;box-shadow:none;
+    overflow:visible;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Creepster','Impact',cursive;
+    font-size:clamp(4.5rem,11vw,8rem);line-height:1;
+    color:#ffd400;
+    text-shadow:3px 3px 0 #000, 0 0 10px rgba(255,212,0,.65);
+    transition:transform .2s,color .2s;
+  }
+  .contador::before,.contador::after{display:none}
+  .contador.sube{transform:scale(1.18);color:#fff176}
+
+  .estado{max-width:1120px;margin:40px auto 0;text-align:center;font-size:.9rem;color:#cfcfcf}
+  .estado.error{color:#ff6b6b}
+
+  @media (max-width:760px){
+    .marcador{justify-content:center}
+    .equipo{align-items:center;width:100%}
+    .tarjetas{gap:8px}
+    .tarjeta:not(.contador){width:min(400px,calc(100vw - 48px));height:auto;aspect-ratio:4/3}
+    .contador{width:min(400px,calc(100vw - 48px));min-height:90px;font-size:clamp(3.5rem,15vw,6rem)}
+  }
+  @media (prefers-reduced-motion:reduce){.contador{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="titulo"><h1>Dinamica Halloween</h1></header>
+
+<main class="marcador">
+  <section class="equipo">
+    <div class="nombre" id="nombre1"></div>
+    <div class="tarjetas">
+      <div class="tarjeta"><img id="img1" src="FAN.png" alt="Imagen del equipo 1"></div>
+      <div class="tarjeta contador" id="contador1">0</div>
+    </div>
+  </section>
+
+  <section class="equipo">
+    <div class="nombre" id="nombre2"></div>
+    <div class="tarjetas">
+      <div class="tarjeta"><img id="img2" src="fred.png" alt="Imagen del equipo 2"></div>
+      <div class="tarjeta contador" id="contador2">0</div>
+    </div>
+  </section>
+</main>
+
+<p class="estado" id="estado">Conectando…</p>
+
+<script>
+  // 1) Pega aquí la URL de tu Web App de Apps Script (termina en /exec)
+  const API_URL = "https://script.google.com/macros/s/AKfycbwlsBG5YrYKhfwSIISaUimI2egEE7vGBi0j6_9oukPN-OqgmjdbyMCKh0qPqFonXxIaUA/exec";
+  // 2) Cada cuántos segundos se actualiza
+  const INTERVALO_SEG = 5;
+
+  const $ = id => document.getElementById(id);
+
+  function pintar(el, valor){
+    const nuevo = String(valor);
+    if (el.textContent !== nuevo){
+      el.textContent = nuevo;
+      el.classList.add('sube');
+      setTimeout(() => el.classList.remove('sube'), 300);
+    }
+  }
+
+  async function actualizar(){
+    try{
+      const r = await fetch(API_URL, {cache:'no-store'});
+      const d = await r.json();
+      // Formato esperado: { equipo1:{nombre,contador}, equipo2:{nombre,contador} }
+      $('nombre1').textContent = d.equipo1.nombre;
+      $('nombre2').textContent = d.equipo2.nombre;
+      pintar($('contador1'), d.equipo1.contador);
+      pintar($('contador2'), d.equipo2.contador);
+      $('estado').className = 'estado';
+      $('estado').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-MX');
+    }catch(e){
+      $('estado').className = 'estado error';
+      $('estado').textContent = 'No se pudo leer el marcador. Revisa la URL del Apps Script.';
+    }
+  }
+
+  actualizar();
+  setInterval(actualizar, INTERVALO_SEG * 1000);
+</script>
+</body>
+</html>
